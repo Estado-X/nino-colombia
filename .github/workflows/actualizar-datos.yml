@@ -1,9 +1,11 @@
 name: Actualizar datos
 
-# Todos los días a las 6:00 a. m. de Bogotá (11:00 UTC) y cuando se pida a mano.
+# Corre a mano desde la pestaña Actions (workflow_dispatch) y, una vez prendida,
+# todos los días a las 6:00 a. m. de Bogotá (11:00 UTC).
+# LANZAMIENTO: para prender la actualización diaria, quitar "# " al inicio de las dos líneas de schedule.
 on:
-  schedule:
-    - cron: "0 11 * * *"
+  # schedule:
+  #   - cron: "0 11 * * *"
   workflow_dispatch:
 
 permissions:
