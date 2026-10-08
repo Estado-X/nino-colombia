@@ -13,12 +13,24 @@ Uso: python scripts/actualizar_datos.py
 import csv
 import io
 import json
+import socket
 import sys
 import time
 import urllib.parse
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+
+# Algunos servidores (NASA FIRMS) publican una dirección IPv6 que los equipos de GitHub
+# Actions no alcanzan ("Network is unreachable"). Se fuerza IPv4 para todas las consultas.
+_getaddrinfo = socket.getaddrinfo
+
+
+def _solo_ipv4(host, port, family=0, *args, **kwargs):
+    return _getaddrinfo(host, port, socket.AF_INET, *args, **kwargs)
+
+
+socket.getaddrinfo = _solo_ipv4
 
 RAIZ = Path(__file__).resolve().parent.parent
 DATOS = RAIZ / "data"
