@@ -1,3 +1,12 @@
 __pycache__/
 .DS_Store
 *.pyc
+# Secretos y archivos que Windows crea solos (kit de seguridad de Estado X)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+Thumbs.db
+desktop.ini
+*.bak

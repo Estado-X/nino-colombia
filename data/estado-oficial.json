@@ -1,8 +1,8 @@
 {
   "nota": "Este archivo se actualiza a mano con cada boletín oficial. No lo cambia el script diario.",
-  "revisado": "2026-10-08",
-  "titular": "El Niño sigue fortaleciéndose",
-  "resumen": "La NOAA mantiene la advertencia de El Niño y da 83 % de probabilidad de un evento histórico entre octubre y diciembre. El IDEAM espera que octubre y noviembre traigan lluvias por debajo de lo normal y que diciembre sea muy seco en todo el país.",
+  "revisado": "2026-10-14",
+  "titular": "El IDEAM declaró oficialmente El Niño",
+  "resumen": "El 8 de octubre el IDEAM confirmó El Niño en Colombia, con 83 % de probabilidad de que se mantenga entre fuerte y muy fuerte al menos hasta marzo de 2027. Octubre y noviembre todavía traen lluvias, aunque menos de lo normal; desde diciembre el déficit de lluvia se intensifica.",
   "declaraciones": [
     {
       "entidad": "NOAA (Estados Unidos)",
@@ -12,21 +12,31 @@
     },
     {
       "entidad": "IDEAM (Colombia)",
-      "fecha": "2026-09-10",
-      "texto": "Hay condiciones de El Niño en el océano y en la atmósfera, y el evento se fortalece. La intensidad más probable es muy fuerte, con 90 % de probabilidad para el último trimestre de 2026.",
-      "url": "https://ideam.gov.co/fenomeno-del-nino"
+      "fecha": "2026-10-08",
+      "texto": "Declaró oficialmente El Niño en Colombia, tras cinco trimestres seguidos con condiciones compatibles. El ONI pasó de 0,5 a 2,2 en cinco meses. Hay 83 % de probabilidad de que el evento siga entre fuerte y muy fuerte al menos hasta marzo de 2027, y podría extenderse hasta mediados de 2027. Pide a los municipios reunir su consejo de gestión del riesgo y tener listos sus planes de contingencia antes del 30 de noviembre.",
+      "url": "https://www.minambiente.gov.co/ideam-confirma-el-fenomeno-de-el-nino-y-ungrd-articula-preparacion-para-afrontar-sus-efectos/",
+      "nombreFuente": "Comunicado del IDEAM y la UNGRD publicado por el Ministerio de Ambiente"
     },
     {
       "entidad": "IDEAM (Colombia)",
-      "fecha": "2026-10-07",
-      "texto": "Octubre y noviembre todavía traen lluvias, aunque por debajo de lo normal. Diciembre será muy seco en todo el país. Se recomienda guardar agua de las lluvias actuales para evitar desabastecimiento a comienzos de 2027.",
-      "url": "https://www.infobae.com/colombia/2026/10/07/el-fenomeno-de-el-nino-no-evitara-los-aguaceros-en-colombia-subdirectora-de-meteorologia-del-ideam-revelo-cuales-seran-los-meses-mas-lluviosos/",
-      "nombreFuente": "Declaraciones de la subdirectora de Meteorología del IDEAM a Infobae"
+      "fecha": "2026-10-13",
+      "texto": "El Niño no elimina las lluvias: en los primeros días de octubre llovió de moderado a fuerte en 24 de los 32 departamentos y 567 municipios tenían alguna alerta por deslizamientos. El mayor déficit de lluvia se espera desde diciembre.",
+      "url": "https://www.infobae.com/colombia/2026/10/13/el-ideam-preve-lluvias-intensas-en-22-departamentos-pese-a-declaratoria-oficial-del-inicio-del-fenomeno-de-el-nino/",
+      "nombreFuente": "Declaraciones del IDEAM a Infobae"
     }
   ],
   "enlaces": [
-    {"texto": "Boletín de seguimiento al ciclo ENOS (IDEAM)", "url": "https://www.ideam.gov.co/sala-de-prensa/boletines/ultimo/Bolet%C3%ADn-de-seguimiento-al-ciclo-ENOS"},
-    {"texto": "Alertas por amenaza de incendios de la cobertura vegetal (IDEAM)", "url": "https://www.ideam.gov.co/sala-de-prensa/boletines/Bolet%C3%ADn-de-Alertas-por-Pron%C3%B3stico-de-la-Amenaza-por-Incendios-de-la-Cobertura-Vegetal-(BAICV)"},
-    {"texto": "Informe técnico diario de alertas y pronósticos (IDEAM)", "url": "https://www.ideam.gov.co/sala-de-prensa/boletines/Informe-T%C3%A9cnico-Diario-de-Condiciones-Hidrometeorol%C3%B3gicas%2C-Alertas-y-Pron%C3%B3sticos-%28ITD%29"}
+    {
+      "texto": "Boletín de seguimiento al ciclo ENOS (IDEAM)",
+      "url": "https://www.ideam.gov.co/sala-de-prensa/boletines/ultimo/Bolet%C3%ADn-de-seguimiento-al-ciclo-ENOS"
+    },
+    {
+      "texto": "Alertas por amenaza de incendios de la cobertura vegetal (IDEAM)",
+      "url": "https://www.ideam.gov.co/sala-de-prensa/boletines/Bolet%C3%ADn-de-Alertas-por-Pron%C3%B3stico-de-la-Amenaza-por-Incendios-de-la-Cobertura-Vegetal-(BAICV)"
+    },
+    {
+      "texto": "Informe técnico diario de alertas y pronósticos (IDEAM)",
+      "url": "https://www.ideam.gov.co/sala-de-prensa/boletines/Informe-T%C3%A9cnico-Diario-de-Condiciones-Hidrometeorol%C3%B3gicas%2C-Alertas-y-Pron%C3%B3sticos-%28ITD%29"
+    }
   ]
 }
