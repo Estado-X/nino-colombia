@@ -19,7 +19,7 @@ Tablero abierto para saber qué está pasando con **El Niño en tu municipio**: 
 | Temperatura | Temperatura máxima de los últimos 7 días por estación | IDEAM, en datos.gov.co |
 | Embalses | Volumen útil del sistema eléctrico, agua que llega frente a lo normal y los embalses más bajos | XM |
 | Incendios | Focos de calor detectados por satélite en las últimas 24 horas | NASA FIRMS (VIIRS NOAA-20; si falla, NOAA-21) |
-| Tu municipio | Los 1.122 municipios del DANE: las estaciones de tu municipio (o las tres más cercanas si no tiene) y los focos de calor a menos de 25 km. Lo buscas por nombre o con tu ubicación, y tiene enlace propio para compartir | Todas las anteriores y DANE (DIVIPOLA) |
+| Tu municipio | Los 1.122 municipios y áreas no municipalizadas del DANE: las estaciones de tu municipio (o las tres más cercanas si no tiene) y los focos de calor a menos de 25 km. Lo buscas por nombre o con tu ubicación, y tiene enlace propio para compartir | Todas las anteriores y DANE (DIVIPOLA) |
 
 Además trae lo último que dicen la NOAA y el IDEAM, con enlace a cada fuente, y:
 
@@ -34,7 +34,7 @@ Además trae lo último que dicen la NOAA y el IDEAM, con enlace a cada fuente, 
 - Si una fuente falla o responde vacía, las demás se actualizan igual y esa capa conserva los datos del día anterior. El problema queda anotado en `data/corrida.json`. Si el archivo de incendios de la NASA llega vacío, la página dice «Hoy no hay datos de incendios» en vez de mostrar cero focos.
 - El texto de las fuentes oficiales vive en `data/estado-oficial.json` y se actualiza a mano con cada boletín.
 - La lista de municipios (`data/municipios.json`) sale del DANE y se arma a mano con `python scripts/armar_municipios.py` cuando cambie la división política.
-- «Usar mi ubicación» compara tu posición con el punto de referencia de cada municipio dentro de tu navegador: no se guarda ni se envía a ningún lado.
+- «Usar mi ubicación» compara tu posición con el punto de referencia de cada municipio dentro de tu navegador: tu ubicación exacta no se guarda ni sale de ahí. Al acercar el mapa, el servidor del mapa base recibe, como con cualquier mapa, la zona que se está mostrando.
 
 ### Úsalo o adáptalo
 
@@ -92,7 +92,7 @@ An open dashboard that shows what **El Niño** is doing in each Colombian munici
 | Temperature | Maximum temperature over the last 7 days, by station | IDEAM, via datos.gov.co |
 | Reservoirs | Usable storage of the power system, inflows compared with normal, and the lowest reservoirs | XM |
 | Fires | Satellite fire hotspots from the last 24 hours | NASA FIRMS (VIIRS NOAA-20, with NOAA-21 as backup) |
-| Your municipality | All 1,122 DANE municipalities: the stations in your municipality (or the three closest if it has none) and hotspots within 25 km. Search by name or use your location; each one has its own link to share | All of the above and DANE (DIVIPOLA) |
+| Your municipality | All 1,122 DANE municipalities and non-municipalized areas: the stations in your municipality (or the three closest if it has none) and hotspots within 25 km. Search by name or use your location; each one has its own link to share | All of the above and DANE (DIVIPOLA) |
 
 It also includes the latest statements from NOAA and IDEAM, each linked to its source, plus:
 
@@ -107,7 +107,7 @@ It also includes the latest statements from NOAA and IDEAM, each linked to its s
 - If one source fails or comes back empty, the others still update and that layer keeps the previous day's data. The problem is logged in `data/corrida.json`. If NASA's fire file comes back empty, the page says there is no fire data today instead of showing zero hotspots.
 - The official statements live in `data/estado-oficial.json` and are updated by hand with each bulletin.
 - The municipality list (`data/municipios.json`) comes from DANE and is rebuilt by hand with `python scripts/armar_municipios.py`.
-- "Use my location" compares your position with each municipality's reference point inside your browser; it is never stored or sent anywhere.
+- "Use my location" compares your position with each municipality's reference point inside your browser; your exact location is never stored or sent. As with any web map, the base map server receives the area being shown when you zoom in.
 
 ### Use it or adapt it
 

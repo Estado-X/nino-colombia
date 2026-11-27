@@ -33,7 +33,8 @@ ALIAS = {
     "villa de leiva|boyaca": "15407",
     "san vicente|antioquia": "05674",
     "el carmen|choco": "27245",
-    "san andres y providencia|archipielago de san andres providencia y santa catalina": "88001",
+    # La estación «San Andrés y Providencia (Santa Isabel)» queda en Providencia, no en San Andrés.
+    "san andres y providencia|archipielago de san andres providencia y santa catalina": "88564",
 }
 
 MINUSCULAS = {"de", "del", "la", "las", "los", "el", "y", "e", "en"}
