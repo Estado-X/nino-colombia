@@ -6,7 +6,7 @@
 <title>El Niño en Colombia · Estado X</title>
 <meta name="description" content="Tablero abierto de El Niño en Colombia: índice oficial, lluvia y temperatura del IDEAM, embalses de XM e incendios activos de la NASA, por municipio.">
 <meta property="og:title" content="El Niño en Colombia">
-<meta property="og:description" content="Lluvia, temperatura, embalses e incendios en tu municipio, con datos oficiales que se actualizan cada mañana.">
+<meta property="og:description" content="Lluvia, temperatura, embalses e incendios en tu municipio, con datos oficiales que se actualizan una vez al día.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +19,7 @@
   <div class="contenedor banda__in">
     <p class="kicker">Tablero abierto · Estado X</p>
     <h1>El Niño en <em>Colombia</em></h1>
-    <p class="banda__sub">Qué está pasando con la lluvia, el calor, los embalses y los incendios en tu municipio. Datos oficiales que se actualizan cada mañana.</p>
+    <p class="banda__sub">Qué está pasando con la lluvia, el calor, los embalses y los incendios en tu municipio. Datos oficiales que se actualizan una vez al día.</p>
     <div class="estado" id="estado" aria-live="polite">
       <div class="estado__cifra">
         <span class="estado__etq">Índice oficial de El Niño (ONI)</span>
@@ -48,7 +48,7 @@
       </div>
       <div id="mapa" class="mapa" role="region" aria-label="Mapa de Colombia con estaciones del IDEAM e incendios activos"></div>
       <div class="leyenda" id="leyenda"></div>
-      <label class="check"><input type="checkbox" id="ver-incendios" checked><span>Mostrar incendios activos de las últimas 24 horas: <span id="n-incendios">…</span> focos</span></label>
+      <label class="check"><input type="checkbox" id="ver-incendios" checked><span id="txt-incendios">Mostrar incendios activos de las últimas 24 horas: … focos</span></label>
     </div>
 
     <aside class="municipio" aria-labelledby="t-mun">
@@ -96,7 +96,7 @@
 <footer class="pie">
   <div class="contenedor pie__in">
     <div>
-      <p><strong>Datos:</strong> NOAA CPC (índice ONI) · IDEAM en datos.gov.co (lluvia y temperatura) · XM (embalses) · NASA FIRMS (incendios). Mapa base: OpenFreeMap, © colaboradores de OpenStreetMap. Última actualización: <span id="fecha-datos">…</span>.</p>
+      <p><strong>Datos:</strong> NOAA CPC (índice ONI) · IDEAM en datos.gov.co (lluvia y temperatura) · XM (embalses) · NASA FIRMS, satélite NOAA-20 (incendios). Mapa base: OpenFreeMap, © colaboradores de OpenStreetMap. Última actualización: <span id="fecha-datos">…</span>.</p>
       <p>Este tablero no es un pronóstico ni reemplaza las alertas del IDEAM ni de la UNGRD. Los datos de estaciones automáticas no están validados.</p>
       <p>Inspirado en <a href="https://github.com/simplifaisoul/osiris">osiris</a> de simplifaisoul (licencia MIT). Código abierto en <a href="https://github.com/Estado-X/nino-colombia">github.com/Estado-X/nino-colombia</a>.</p>
     </div>

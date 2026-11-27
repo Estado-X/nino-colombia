@@ -1,14 +1,22 @@
 {
   "nota": "Este archivo se actualiza a mano con cada boletín oficial. No lo cambia el script diario.",
-  "revisado": "2026-10-14",
-  "titular": "El IDEAM declaró oficialmente El Niño",
-  "resumen": "El 8 de octubre el IDEAM confirmó El Niño en Colombia, con 83 % de probabilidad de que se mantenga entre fuerte y muy fuerte al menos hasta marzo de 2027. Octubre y noviembre todavía traen lluvias, aunque menos de lo normal; desde diciembre el déficit de lluvia se intensifica.",
+  "revisado": "2026-11-26",
+  "titular": "El Niño sigue fortaleciéndose y noviembre llovió menos de lo normal",
+  "resumen": "El IDEAM declaró El Niño el 8 de octubre. En su discusión del 12 de noviembre, la NOAA dice que sigue fortaleciéndose, con más de 79 % de probabilidad de mantenerse entre fuerte y muy fuerte hasta enero–marzo de 2027. Según un informe del IDEAM citado el 20 de noviembre, la segunda temporada de lluvias no se desarrolló con la intensidad ni la frecuencia normales, y diciembre sería uno de los más cálidos.",
   "declaraciones": [
     {
       "entidad": "NOAA (Estados Unidos)",
-      "fecha": "2026-10-08",
-      "texto": "Advertencia de El Niño activa. Es probable un El Niño entre fuerte y muy fuerte hasta enero–marzo de 2027. La probabilidad de un evento histórico, el más fuerte desde 1950, es de 83 % para octubre–diciembre.",
-      "url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml"
+      "fecha": "2026-11-12",
+      "texto": "Advertencia de El Niño activa. El Niño sigue fortaleciéndose: la anomalía del Pacífico en la región Niño 3.4 llegó a +2,5 °C. Es probable un El Niño entre fuerte y muy fuerte hasta enero–marzo de 2027 (más de 79 %), y la probabilidad de un evento histórico, el más fuerte desde 1950, es de cerca de 60 % para octubre–diciembre y noviembre–enero. Empezaría a debilitarse a comienzos de 2027. La próxima discusión es el 10 de diciembre.",
+      "url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml",
+      "nombreFuente": "Discusión mensual del Centro de Predicción Climática de la NOAA"
+    },
+    {
+      "entidad": "IDEAM (Colombia)",
+      "fecha": "2026-11-20",
+      "texto": "Por El Niño, la segunda temporada de lluvias no se ha desarrollado con la intensidad ni la frecuencia suficientes: las lluvias de noviembre están por debajo de lo habitual. Estas podrían ser las últimas lluvias antes del pico del fenómeno, y el IDEAM proyecta que diciembre sea uno de los meses más cálidos.",
+      "url": "https://www.elheraldo.co/atlantico/2026/11/20/por-el-nino-lluvias-de-noviembre-han-estado-por-debajo-de-la-intensidad-y-frecuencia-previstas/",
+      "nombreFuente": "Informe del IDEAM citado por El Heraldo"
     },
     {
       "entidad": "IDEAM (Colombia)",
@@ -16,13 +24,6 @@
       "texto": "Declaró oficialmente El Niño en Colombia, tras cinco trimestres seguidos con condiciones compatibles. El ONI pasó de 0,5 a 2,2 en cinco meses. Hay 83 % de probabilidad de que el evento siga entre fuerte y muy fuerte al menos hasta marzo de 2027, y podría extenderse hasta mediados de 2027. Pide a los municipios reunir su consejo de gestión del riesgo y tener listos sus planes de contingencia antes del 30 de noviembre.",
       "url": "https://www.minambiente.gov.co/ideam-confirma-el-fenomeno-de-el-nino-y-ungrd-articula-preparacion-para-afrontar-sus-efectos/",
       "nombreFuente": "Comunicado del IDEAM y la UNGRD publicado por el Ministerio de Ambiente"
-    },
-    {
-      "entidad": "IDEAM (Colombia)",
-      "fecha": "2026-10-13",
-      "texto": "El Niño no elimina las lluvias: en los primeros días de octubre llovió de moderado a fuerte en 24 de los 32 departamentos y 567 municipios tenían alguna alerta por deslizamientos. El mayor déficit de lluvia se espera desde diciembre.",
-      "url": "https://www.infobae.com/colombia/2026/10/13/el-ideam-preve-lluvias-intensas-en-22-departamentos-pese-a-declaratoria-oficial-del-inicio-del-fenomeno-de-el-nino/",
-      "nombreFuente": "Declaraciones del IDEAM a Infobae"
     }
   ],
   "enlaces": [

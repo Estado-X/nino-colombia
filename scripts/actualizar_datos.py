@@ -5,7 +5,7 @@ Fuentes (todas abiertas y sin claves):
   - NOAA CPC: índice ONI (El Niño / La Niña).
   - IDEAM en datos.gov.co: lluvia (s54a-sgyg) y temperatura máxima (ccvq-rp9s).
   - XM: volumen útil de los embalses y aportes hídricos (servapibi.xm.com.co).
-  - NASA FIRMS: focos de calor VIIRS de las últimas 24 horas.
+  - NASA FIRMS: focos de calor VIIRS de las últimas 24 horas (NOAA-20; si falla, NOAA-21).
 
 Solo usa la biblioteca estándar de Python 3.9+.
 Uso: python scripts/actualizar_datos.py
@@ -160,6 +160,8 @@ def ideam():
                       "departamento": f["departamento"].title(), "lat": round(lat, 5), "lon": round(lon, 5),
                       "lluvia30": None, "lluvia7": None, "ultimaLluvia": None, "reciente": True}
         est[k]["tmax7"] = round(t, 1)
+    if not est:  # respuesta vacía: se conserva el archivo del día anterior y queda el error
+        raise RuntimeError("el IDEAM no devolvió estaciones con datos")
     guardar("estaciones.json", {
         "fuente": "IDEAM, datos abiertos en datos.gov.co: Precipitación (s54a-sgyg) y Temperatura Máxima del Aire (ccvq-rp9s)",
         "url": "https://www.datos.gov.co/resource/s54a-sgyg",
@@ -191,6 +193,8 @@ def xm():
     print("Embalses · XM")
     vol = xm_diario("PorcVoluUtilDiar", "Sistema", 120)
     apo = xm_diario("PorcApor", "Sistema", 120)
+    if not vol:  # respuesta vacía: se conserva el archivo del día anterior y queda el error
+        raise RuntimeError("XM no devolvió el volumen útil del sistema")
     fin = HOY - timedelta(days=1)
     ult = []
     for d in range(0, 5):  # el último día con datos por embalse
@@ -225,39 +229,77 @@ def dentro(lon, lat, anillo):
     return adentro
 
 
-def incendios():
+# Archivos globales de 24 horas, en orden de preferencia. Desde el 3 nov 2026 el de Suomi NPP
+# llega vacío (solo la fila de títulos); por eso se usa NOAA-20 y, si falla, NOAA-21.
+SATELITES = [
+    ("NOAA-20", "https://firms.modaps.eosdis.nasa.gov/data/active_fire/noaa-20-viirs-c2/csv/J1_VIIRS_C2_Global_24h.csv"),
+    ("NOAA-21", "https://firms.modaps.eosdis.nasa.gov/data/active_fire/noaa-21-viirs-c2/csv/J2_VIIRS_C2_Global_24h.csv"),
+]
+NOTA_INCENDIOS = ("Focos de calor detectados por satélite. No todos son incendios forestales: "
+                  "también aparecen quemas agrícolas y fuentes industriales.")
+
+
+def incendios(avisos):
     print("Incendios · NASA FIRMS")
     col = json.loads((DATOS / "colombia.geojson").read_text(encoding="utf-8"))
     poligonos = col["features"][0]["geometry"]["coordinates"]
-    url = "https://firms.modaps.eosdis.nasa.gov/data/active_fire/suomi-npp-viirs-c2/csv/SUOMI_VIIRS_C2_Global_24h.csv"
-    texto = bajar(url, espera=180).decode("utf-8", "replace")
-    focos = []
-    for f in csv.DictReader(io.StringIO(texto)):
-        lat, lon = float(f["latitude"]), float(f["longitude"])
-        if not (-4.3 <= lat <= 13.6 and -82.0 <= lon <= -66.8):
+    for satelite, url in SATELITES:
+        try:
+            texto = bajar(url, espera=180).decode("utf-8", "replace")
+        except Exception as e:
+            avisos.append(f"incendios: no se pudo bajar el archivo de {satelite} ({e})")
             continue
-        if any(dentro(lon, lat, poly[0]) for poly in poligonos):
-            focos.append({"lat": round(lat, 4), "lon": round(lon, 4), "fecha": f["acq_date"],
-                          "hora": f["acq_time"], "confianza": f["confidence"], "frp": num(f["frp"])})
+        filas = list(csv.DictReader(io.StringIO(texto)))
+        # Un archivo global sin ninguna fila no significa «cero focos»: significa que no hay datos.
+        if not filas:
+            avisos.append(f"incendios: el archivo de {satelite} llegó vacío")
+            continue
+        focos = []
+        for f in filas:
+            lat, lon = float(f["latitude"]), float(f["longitude"])
+            if not (-4.3 <= lat <= 13.6 and -82.0 <= lon <= -66.8):
+                continue
+            if any(dentro(lon, lat, poly[0]) for poly in poligonos):
+                focos.append({"lat": round(lat, 4), "lon": round(lon, 4), "fecha": f["acq_date"],
+                              "hora": f["acq_time"], "confianza": f["confidence"], "frp": num(f["frp"])})
+        print(f"  {satelite}: {len(filas)} focos en el mundo, {len(focos)} en Colombia")
+        guardar("incendios.json", {
+            "fuente": f"NASA FIRMS, VIIRS {satelite} 375 m, últimas 24 horas",
+            "url": "https://firms.modaps.eosdis.nasa.gov/",
+            "actualizado": HOY.isoformat(),
+            "satelite": satelite,
+            "sinDatos": False,
+            "nota": NOTA_INCENDIOS,
+            "focos": focos,
+        })
+        return
+    # Ningún satélite trajo datos: la página debe decir que hoy no hay datos, no que no hay focos.
     guardar("incendios.json", {
-        "fuente": "NASA FIRMS, VIIRS S-NPP 375 m, últimas 24 horas",
+        "fuente": "NASA FIRMS, VIIRS NOAA-20 y NOAA-21 375 m, últimas 24 horas",
         "url": "https://firms.modaps.eosdis.nasa.gov/",
         "actualizado": HOY.isoformat(),
-        "nota": "Focos de calor detectados por satélite. No todos son incendios forestales: también aparecen quemas agrícolas y fuentes industriales.",
-        "focos": focos,
+        "satelite": None,
+        "sinDatos": True,
+        "nota": NOTA_INCENDIOS,
+        "focos": [],
     })
 
 
 def main():
     DATOS.mkdir(exist_ok=True)
     errores = []
-    for paso in (oni, ideam, xm, incendios):
+    avisos = []  # la fuente respondió, pero algo no está bien (por ejemplo, un archivo vacío)
+    pasos = [("oni", oni), ("ideam", ideam), ("xm", xm), ("incendios", lambda: incendios(avisos))]
+    for nombre, paso in pasos:
         try:
             paso()
         except Exception as e:  # una fuente caída no tumba las demás: queda el archivo del día anterior
-            errores.append(f"{paso.__name__}: {e}")
-            print(f"  ERROR en {paso.__name__}: {e}", file=sys.stderr)
-    estado = {"actualizado": datetime.now(timezone.utc).isoformat(timespec="minutes"), "errores": errores}
+            errores.append(f"{nombre}: {e}")
+            print(f"  ERROR en {nombre}: {e}", file=sys.stderr)
+    for a in avisos:
+        print(f"  AVISO {a}", file=sys.stderr)
+    estado = {"actualizado": datetime.now(timezone.utc).isoformat(timespec="minutes"),
+              "errores": errores, "avisos": avisos}
     guardar("corrida.json", estado)
     if len(errores) == 4:
         sys.exit(1)

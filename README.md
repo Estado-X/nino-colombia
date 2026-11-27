@@ -6,7 +6,7 @@
 
 ## Español
 
-Tablero abierto para saber qué está pasando con **El Niño en tu municipio**: la lluvia, el calor, los embalses y los incendios activos, con datos oficiales que se actualizan solos cada mañana.
+Tablero abierto para saber qué está pasando con **El Niño en tu municipio**: la lluvia, el calor, los embalses y los incendios activos, con datos oficiales que se actualizan solos una vez al día.
 
 **Ábrelo aquí:** https://estado-x.github.io/nino-colombia/
 
@@ -18,7 +18,7 @@ Tablero abierto para saber qué está pasando con **El Niño en tu municipio**: 
 | Lluvia | Milímetros acumulados en 7 y 30 días en cada estación automática | IDEAM, en datos.gov.co |
 | Temperatura | Temperatura máxima de los últimos 7 días por estación | IDEAM, en datos.gov.co |
 | Embalses | Volumen útil del sistema eléctrico, agua que llega frente a lo normal y los embalses más bajos | XM |
-| Incendios | Focos de calor detectados por satélite en las últimas 24 horas | NASA FIRMS (VIIRS) |
+| Incendios | Focos de calor detectados por satélite en las últimas 24 horas | NASA FIRMS (VIIRS NOAA-20; si falla, NOAA-21) |
 | Tu municipio | Lo anterior para las estaciones de tu municipio y los focos de calor a menos de 25 km | Todas las anteriores |
 
 Además trae lo último que dicen la NOAA y el IDEAM, con enlace a cada fuente.
@@ -26,8 +26,8 @@ Además trae lo último que dicen la NOAA y el IDEAM, con enlace a cada fuente.
 ### Cómo funciona
 
 - Es una página estática (HTML, CSS y JavaScript) publicada con GitHub Pages. No tiene servidor ni base de datos, y no necesita claves.
-- Todos los días a las 6:00 a. m. (hora de Colombia), GitHub Actions corre `scripts/actualizar_datos.py`. El script baja los datos de las cuatro fuentes, los resume y los guarda en `data/`.
-- Si una fuente falla, las demás se actualizan igual y esa capa conserva los datos del día anterior.
+- Una vez al día, GitHub Actions corre `scripts/actualizar_datos.py` (está programado para las 6:00 a. m. de Colombia, pero GitHub suele arrancarlo varias horas después). El script baja los datos de las cuatro fuentes, los resume y los guarda en `data/`.
+- Si una fuente falla o responde vacía, las demás se actualizan igual y esa capa conserva los datos del día anterior. El problema queda anotado en `data/corrida.json`. Si el archivo de incendios de la NASA llega vacío, la página dice «Hoy no hay datos de incendios» en vez de mostrar cero focos.
 - El texto de las fuentes oficiales vive en `data/estado-oficial.json` y se actualiza a mano con cada boletín.
 
 ### Úsalo o adáptalo
@@ -62,7 +62,7 @@ Hecho por **[Estado X](https://estadox.com)** · Código con licencia MIT.
 
 ## English
 
-An open dashboard that shows what **El Niño** is doing in each Colombian municipality: rainfall, heat, hydropower reservoirs and active fires. It uses official data that updates itself every morning.
+An open dashboard that shows what **El Niño** is doing in each Colombian municipality: rainfall, heat, hydropower reservoirs and active fires. It uses official data that updates itself once a day.
 
 **Open it here:** https://estado-x.github.io/nino-colombia/
 
@@ -74,7 +74,7 @@ An open dashboard that shows what **El Niño** is doing in each Colombian munici
 | Rainfall | 7- and 30-day accumulated rainfall at each automatic weather station | IDEAM, via datos.gov.co |
 | Temperature | Maximum temperature over the last 7 days, by station | IDEAM, via datos.gov.co |
 | Reservoirs | Usable storage of the power system, inflows compared with normal, and the lowest reservoirs | XM |
-| Fires | Satellite fire hotspots from the last 24 hours | NASA FIRMS (VIIRS) |
+| Fires | Satellite fire hotspots from the last 24 hours | NASA FIRMS (VIIRS NOAA-20, with NOAA-21 as backup) |
 | Your municipality | All of the above for the stations in your municipality, plus hotspots within 25 km | All of the above |
 
 It also includes the latest statements from NOAA and IDEAM, each linked to its source.
@@ -82,8 +82,8 @@ It also includes the latest statements from NOAA and IDEAM, each linked to its s
 ### How it works
 
 - It is a static page (HTML, CSS and JavaScript) published with GitHub Pages. There is no server, no database and no API keys.
-- Every day at 6:00 a.m. Colombia time, GitHub Actions runs `scripts/actualizar_datos.py`. The script downloads the four sources, summarizes them and saves the results to `data/`.
-- If one source fails, the others still update and that layer keeps the previous day's data.
+- Once a day, GitHub Actions runs `scripts/actualizar_datos.py` (scheduled for 6:00 a.m. Colombia time, though GitHub often starts it several hours later). The script downloads the four sources, summarizes them and saves the results to `data/`.
+- If one source fails or comes back empty, the others still update and that layer keeps the previous day's data. The problem is logged in `data/corrida.json`. If NASA's fire file comes back empty, the page says there is no fire data today instead of showing zero hotspots.
 - The official statements live in `data/estado-oficial.json` and are updated by hand with each bulletin.
 
 ### Use it or adapt it

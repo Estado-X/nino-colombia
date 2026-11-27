@@ -1,5 +1,5 @@
 /* El Niño en Colombia · Estado X
-   Lee los archivos de data/ (generados cada mañana por scripts/actualizar_datos.py) y arma el tablero. */
+   Lee los archivos de data/ (generados una vez al día por scripts/actualizar_datos.py) y arma el tablero. */
 (function () {
   "use strict";
 
@@ -101,7 +101,7 @@
   }
 
   // ---------------------------------------------------------------- Mapa
-  let mapa, estaciones = [], focos = [], capaActual = "lluvia30";
+  let mapa, estaciones = [], focos = [], sinDatosIncendios = false, capaActual = "lluvia30";
 
   function geojsonEstaciones() {
     return {
@@ -205,10 +205,12 @@
       <div class="tabla-scroll"><table><thead><tr><th>Estación</th><th>7 días</th><th>30 días</th><th>Máx.</th></tr></thead><tbody>` +
       lista.map((e) => `<tr><td>${esc(e.nombre.replace(/\s*\[\d+\]$/, ""))}${e.reciente === false ? ' <span style="color:#a23b3b">(sin datos recientes)</span>' : ""}</td><td class="n">${fmt(e.lluvia7, 1)}</td><td class="n">${fmt(e.lluvia30, 1)}</td><td class="n">${e.tmax7 == null ? "—" : fmt(e.tmax7, 1) + "°"}</td></tr>`).join("") +
       `</tbody></table></div>`;
-    html += cerca
+    html += sinDatosIncendios
+      ? `<p class="aviso">Hoy no hay datos de incendios de la NASA, así que no sabemos si hay focos de calor cerca. Si ves humo o fuego, llama al 123.</p>`
+      : cerca
       ? `<p class="aviso"><strong>${cerca} ${cerca === 1 ? "foco de calor" : "focos de calor"}</strong> a menos de 25 km en las últimas 24 horas. Si ves humo o fuego, llama al 123.</p>`
       : `<p class="nota">Sin focos de calor a menos de 25 km en las últimas 24 horas.</p>`;
-    html += `<p class="nota">Lluvia en milímetros y temperatura en °C, de estaciones automáticas del IDEAM (datos sin validar). El IDEAM recomienda guardar agua de las lluvias de octubre y noviembre.</p>`;
+    html += `<p class="nota">Lluvia en milímetros y temperatura en °C, de estaciones automáticas del IDEAM (datos sin validar).</p>`;
     $("#ficha").innerHTML = html;
     if (mapa) mapa.flyTo({ center: [centro.lon, centro.lat], zoom: 9, speed: 1.4 });
   }
@@ -244,7 +246,10 @@
       $("#emb-fuente").textContent = `Fuente: XM. Volumen útil y aportes del sistema eléctrico al ${fechaLarga(v[v.length - 1].fecha)}.`;
     }
     focos = inc ? inc.focos : [];
-    $("#n-incendios").textContent = fmt(focos.length);
+    sinDatosIncendios = !inc || inc.sinDatos === true;
+    $("#txt-incendios").textContent = sinDatosIncendios
+      ? "Hoy no hay datos de incendios de la NASA."
+      : `Mostrar incendios activos de las últimas 24 horas: ${fmt(focos.length)} ${focos.length === 1 ? "foco" : "focos"}`;
     estaciones = est ? est.estaciones : [];
     const claves = [...new Set(estaciones.map(claveMun))].sort((x, y) => x.localeCompare(y, "es"));
     $("#lista-municipios").innerHTML = claves.map((c) => `<option value="${esc(c)}"></option>`).join("");
