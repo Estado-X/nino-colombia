@@ -1,0 +1,104 @@
+name: Abrir la V2
+
+# Une la rama v2 en main la noche antes del post del viernes 4 dic 2026.
+# Intentos programados (hora de Bogotá): jue 3 dic 11:17 p. m., vie 4 dic 2:17 a. m. y 5:17 a. m.
+# Seguro de fecha: solo une entre el jue 3 dic, 11:00 p. m., y el vie 4 dic, 3:00 p. m. (Bogotá);
+# si la V2 ya está en main, termina en verde sin hacer nada; fuera de la ventana y sin la V2 en main,
+# termina en rojo (sin unir) para que llegue el correo de fallo.
+# A mano: pestaña Actions → «Abrir la V2» → Run workflow. Con «forzar» se salta la ventana de fechas.
+on:
+  schedule:
+    - cron: "17 4,7,10 4 12 *"
+  workflow_dispatch:
+    inputs:
+      forzar:
+        description: "Unir aunque esté fuera de la ventana de fechas"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: abrir-v2
+  cancel-in-progress: false
+
+jobs:
+  unir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Revisar la ventana de fechas
+        id: ventana
+        env:
+          FORZAR: ${{ github.event.inputs.forzar }}
+        run: |
+          git fetch origin main v2
+          if git merge-base --is-ancestor origin/v2 origin/main; then
+            echo "La V2 ya está en main: nada que unir."
+            echo "seguir=ya" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          ahora=$(date -u +%s)
+          desde=$(date -u -d "2026-12-04T04:00:00Z" +%s)   # jue 3 dic, 11:00 p. m. en Bogotá
+          hasta=$(date -u -d "2026-12-04T20:00:00Z" +%s)   # vie 4 dic, 3:00 p. m. en Bogotá: la hora del post
+          if [ "$FORZAR" = "true" ] || { [ "$ahora" -ge "$desde" ] && [ "$ahora" -le "$hasta" ]; }; then
+            echo "seguir=si" >> "$GITHUB_OUTPUT"
+          else
+            # Fuera de la ventana y sin la V2 en main: en rojo, para que llegue el correo de fallo.
+            echo "::error::Fuera de la ventana de fechas y la V2 no está en main. No se unió nada: revisar y, si toca, correrlo a mano con «forzar»."
+            exit 1
+          fi
+
+      - name: Unir v2 en main
+        id: unir
+        if: steps.ventana.outputs.seguir == 'si'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # El robot de datos también escribe en main: si sube algo en medio, se vuelve a intentar.
+          for intento in 1 2 3; do
+            git fetch origin main v2
+            git reset --hard origin/main
+            if ! git merge --no-ff origin/v2 -m "Abre la V2 del tablero"; then
+              git merge --abort || true
+              echo "::error::La rama v2 choca con main. No se tocó main; hay que unirla a mano."
+              exit 1
+            fi
+            if git push origin HEAD:main; then
+              echo "unida=si" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "main cambió mientras se unía (intento $intento); se repite en 20 s."
+            sleep 20
+          done
+          echo "::error::No se pudo subir la unión después de 3 intentos."
+          exit 1
+
+      - name: Actualizar los datos con la V2
+        # Una subida del robot de GitHub no arranca otros flujos por sí sola: se dispara a mano.
+        if: steps.unir.outputs.unida == 'si'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run actualizar-datos.yml --ref main -R "$GITHUB_REPOSITORY"
+
+      - name: Comprobar la página en vivo
+        if: steps.unir.outputs.unida == 'si' || steps.ventana.outputs.seguir == 'ya'
+        run: |
+          url="https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}/"
+          for i in $(seq 1 30); do
+            if curl -fsSL "${url}?v=$(date +%s)" | grep -q '<meta name="version" content="2">'; then
+              echo "La página en vivo ya muestra la V2: $url"
+              exit 0
+            fi
+            echo "Todavía no ($i de 30); espero 30 s."
+            sleep 30
+          done
+          echo "::error::La página en vivo no muestra la V2 después de 15 minutos: $url"
+          exit 1
