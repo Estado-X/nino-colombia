@@ -1,11 +1,11 @@
 name: Actualizar datos
 
-# Corre a mano desde la pestaña Actions (workflow_dispatch) y, una vez prendida,
-# todos los días a las 6:00 a. m. de Bogotá (11:00 UTC).
-# LANZAMIENTO: para prender la actualización diaria, quitar "# " al inicio de las dos líneas de schedule.
+# Corre una vez al día y también a mano desde la pestaña Actions (workflow_dispatch).
+# Está programado para las 4:37 a. m. de Bogotá (9:37 UTC), fuera de la hora en punto, cuando GitHub
+# tiene menos fila; aun así GitHub puede arrancarlo varias horas después.
 on:
   schedule:
-    - cron: "0 11 * * *"
+    - cron: "37 9 * * *"
   workflow_dispatch:
 
 permissions:
