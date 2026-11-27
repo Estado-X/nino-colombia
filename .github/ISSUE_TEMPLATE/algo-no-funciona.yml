@@ -1,0 +1,25 @@
+name: Algo no funciona
+description: Un dato raro, una estación o un municipio que falta, o algo que no se ve bien.
+labels: ["error"]
+body:
+  - type: textarea
+    id: que-paso
+    attributes:
+      label: ¿Qué pasó?
+      description: Cuéntalo con tus palabras. Si es un municipio o una estación, escribe su nombre.
+    validations:
+      required: true
+  - type: textarea
+    id: que-esperabas
+    attributes:
+      label: ¿Qué esperabas ver?
+  - type: input
+    id: donde
+    attributes:
+      label: ¿Dónde lo viste?
+      description: Celular o computador, y el navegador si lo sabes.
+  - type: textarea
+    id: captura
+    attributes:
+      label: Captura (opcional)
+      description: Puedes arrastrar una imagen aquí.

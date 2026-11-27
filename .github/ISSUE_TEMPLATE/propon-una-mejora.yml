@@ -1,0 +1,21 @@
+name: Propón una mejora
+description: Una idea para que el tablero le sirva más a tu municipio o a tu alcaldía.
+labels: ["mejora"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: ¿Qué propones?
+    validations:
+      required: true
+  - type: textarea
+    id: para-quien
+    attributes:
+      label: ¿A quién le serviría y para qué?
+      description: Por ejemplo, al consejo municipal de gestión del riesgo, a un acueducto rural o a un colegio.
+  - type: checkboxes
+    id: reglas
+    attributes:
+      label: Antes de enviar
+      options:
+        - label: La idea usa datos oficiales y abiertos, sin claves ni servidor.

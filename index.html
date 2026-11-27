@@ -3,14 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="version" content="2">
 <title>El Niño en Colombia · Estado X</title>
-<meta name="description" content="Tablero abierto de El Niño en Colombia: índice oficial, lluvia y temperatura del IDEAM, embalses de XM e incendios activos de la NASA, por municipio.">
+<meta name="description" content="Tablero abierto de El Niño en Colombia: índice oficial, lluvia y temperatura del IDEAM, embalses de XM e incendios activos de la NASA, para cada municipio.">
 <meta property="og:title" content="El Niño en Colombia">
 <meta property="og:description" content="Lluvia, temperatura, embalses e incendios en tu municipio, con datos oficiales que se actualizan una vez al día.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <link rel="stylesheet" href="assets/estilos.css">
 </head>
@@ -18,7 +16,7 @@
 <header class="banda">
   <div class="contenedor banda__in">
     <p class="kicker">Tablero abierto · Estado X</p>
-    <h1>El Niño en <em>Colombia</em></h1>
+    <h1>El Niño en <span class="destacado">Colombia</span></h1>
     <p class="banda__sub">Qué está pasando con la lluvia, el calor, los embalses y los incendios en tu municipio. Datos oficiales que se actualizan una vez al día.</p>
     <div class="estado" id="estado" aria-live="polite">
       <div class="estado__cifra">
@@ -29,14 +27,27 @@
       <div class="estado__texto">
         <span class="pildora" id="oni-nivel">…</span>
         <p id="estado-titular" class="estado__tit"></p>
-        <p id="estado-resumen"></p>
+        <p id="estado-resumen" class="estado__resumen"></p>
+        <button type="button" class="leer-todo" id="leer-todo" aria-expanded="false" hidden>Leer todo</button>
       </div>
     </div>
   </div>
 </header>
 
 <main class="contenedor">
-  <section class="bloque mapa-municipio" aria-labelledby="t-mapa">
+  <section class="bloque mapa-municipio" aria-label="Tu municipio y el mapa">
+    <aside class="municipio" aria-labelledby="t-mun">
+      <h2 id="t-mun">Tu municipio</h2>
+      <label for="buscar" class="etq">Escribe el nombre y elígelo de la lista</label>
+      <input id="buscar" list="lista-municipios" placeholder="Ej.: Neiva, Huila" autocomplete="off">
+      <datalist id="lista-municipios"></datalist>
+      <button type="button" class="boton boton--claro boton--ancho" id="usar-ubicacion">Usar mi ubicación</button>
+      <p class="nota" id="ubicacion-estado" aria-live="polite"></p>
+      <div id="ficha" class="ficha" aria-live="polite">
+        <p class="vacio">Elige tu municipio para ver la lluvia, la temperatura y los incendios cercanos. Están los 1.122 municipios del DANE; si el tuyo no tiene estación del IDEAM, te mostramos las más cercanas.</p>
+      </div>
+    </aside>
+
     <div class="mapa-col">
       <div class="cabeza">
         <h2 id="t-mapa">El mapa</h2>
@@ -50,23 +61,18 @@
       <div class="leyenda" id="leyenda"></div>
       <label class="check"><input type="checkbox" id="ver-incendios" checked><span id="txt-incendios">Mostrar incendios activos de las últimas 24 horas: … focos</span></label>
     </div>
-
-    <aside class="municipio" aria-labelledby="t-mun">
-      <h2 id="t-mun">Tu municipio</h2>
-      <label for="buscar" class="etq">Escribe el nombre y elígelo de la lista</label>
-      <input id="buscar" list="lista-municipios" placeholder="Ej.: Neiva, Huila" autocomplete="off">
-      <datalist id="lista-municipios"></datalist>
-      <div id="ficha" class="ficha">
-        <p class="vacio">Elige un municipio para ver la lluvia, la temperatura y los incendios cercanos. Solo aparecen los municipios con estación automática del IDEAM que reporta datos.</p>
-      </div>
-    </aside>
   </section>
 
   <section class="bloque dos" aria-label="Índice de El Niño y embalses">
     <article class="tarjeta">
       <p class="kicker kicker--oliva">El termómetro del Pacífico</p>
       <h2>¿Qué tan fuerte es este Niño?</h2>
-      <p class="ayuda">Diferencia de temperatura del océano Pacífico frente a lo normal, por trimestres. Desde +0,5 °C hay El Niño; desde +2,0 °C se considera muy fuerte.</p>
+      <div class="capas capas--chicas" role="radiogroup" aria-label="Qué mostrar en la gráfica">
+        <button type="button" class="capa vista-oni activa" data-vista="reciente" role="radio" aria-checked="true">Desde 2023</button>
+        <button type="button" class="capa vista-oni" data-vista="2015" role="radio" aria-checked="false">Frente a 2015–2016</button>
+      </div>
+      <p class="ayuda" id="ayuda-oni">Diferencia de temperatura del océano Pacífico frente a lo normal, por trimestres. Desde +0,5 °C hay El Niño; desde +2,0 °C se considera muy fuerte.</p>
+      <p class="ayuda" id="ayuda-2015" hidden>El Niño de 2015–2016 fue uno de los más fuertes registrados. Las dos líneas arrancan en diciembre–febrero del año en que empezó cada uno, para compararlos trimestre a trimestre.</p>
       <div id="graf-oni" class="graf" role="img" aria-label="Gráfica del índice ONI"></div>
       <p class="fuente">Fuente: NOAA Climate Prediction Center (ONI).</p>
     </article>
@@ -91,18 +97,30 @@
     <div id="declaraciones" class="declaraciones"></div>
     <ul id="enlaces" class="enlaces"></ul>
   </section>
+
+  <section class="bloque colabora" aria-labelledby="t-col">
+    <h2 id="t-col">Este tablero es abierto</h2>
+    <p>Úsalo, cópialo gratis para tu alcaldía o gobernación, o ayúdanos a mejorarlo. Si ves un dato raro, una estación que falta o tienes una idea, cuéntanos.</p>
+    <div class="acciones-colabora">
+      <a class="boton boton--principal" href="https://github.com/Estado-X/nino-colombia/issues/new/choose" rel="noopener">Propón una mejora</a>
+      <a class="boton" href="https://github.com/Estado-X/nino-colombia/blob/main/CONTRIBUTING.md" rel="noopener">Cómo colaborar</a>
+      <a class="boton" href="https://github.com/Estado-X/nino-colombia" rel="noopener">Ver el código</a>
+    </div>
+  </section>
 </main>
 
 <footer class="pie">
   <div class="contenedor pie__in">
     <div>
-      <p><strong>Datos:</strong> NOAA CPC (índice ONI) · IDEAM en datos.gov.co (lluvia y temperatura) · XM (embalses) · NASA FIRMS, satélite NOAA-20 (incendios). Mapa base: OpenFreeMap, © colaboradores de OpenStreetMap. Última actualización: <span id="fecha-datos">…</span>.</p>
+      <p><strong>Datos:</strong> NOAA CPC (índice ONI) · IDEAM en datos.gov.co (lluvia y temperatura) · XM (embalses) · NASA FIRMS, satélite NOAA-20 (incendios) · DANE, DIVIPOLA (municipios, CC BY-SA 4.0). Mapa base: OpenFreeMap, © colaboradores de OpenStreetMap. Última actualización: <span id="fecha-datos">…</span> (hora de Colombia).</p>
       <p>Este tablero no es un pronóstico ni reemplaza las alertas del IDEAM ni de la UNGRD. Los datos de estaciones automáticas no están validados.</p>
       <p>Inspirado en <a href="https://github.com/simplifaisoul/osiris">osiris</a> de simplifaisoul (licencia MIT). Código abierto en <a href="https://github.com/Estado-X/nino-colombia">github.com/Estado-X/nino-colombia</a>.</p>
     </div>
-    <p class="firma">Estado X · <em>Donde la política pública se convierte en acción.</em></p>
+    <p class="firma">Estado X · Donde la política pública se convierte en acción.</p>
   </div>
 </footer>
+
+<section id="impresion" class="impresion" aria-hidden="true"></section>
 
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script src="assets/app.js"></script>

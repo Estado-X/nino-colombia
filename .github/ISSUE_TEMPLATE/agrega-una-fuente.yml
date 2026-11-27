@@ -1,0 +1,28 @@
+name: Agrega una fuente
+description: Propón una fuente oficial y abierta de datos sobre El Niño en Colombia.
+labels: ["fuente de datos"]
+body:
+  - type: input
+    id: fuente
+    attributes:
+      label: Nombre de la fuente y entidad
+    validations:
+      required: true
+  - type: input
+    id: enlace
+    attributes:
+      label: Enlace a los datos
+    validations:
+      required: true
+  - type: textarea
+    id: que-aporta
+    attributes:
+      label: ¿Qué mostraría en el tablero?
+  - type: dropdown
+    id: acceso
+    attributes:
+      label: ¿Cómo se consigue?
+      options:
+        - Archivo o servicio abierto, sin clave
+        - Pide registro o clave
+        - No lo sé

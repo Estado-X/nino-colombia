@@ -30,6 +30,18 @@
   const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
   const fechaLarga = (iso) => { if (!iso) return "—"; const [a, m, d] = iso.slice(0, 10).split("-").map(Number); return `${d} ${MESES[m - 1]} ${a}`; };
   const TRIM = { DJF: "dic–feb", JFM: "ene–mar", FMA: "feb–abr", MAM: "mar–may", AMJ: "abr–jun", MJJ: "may–jul", JJA: "jun–ago", JAS: "jul–sep", ASO: "ago–oct", SON: "sep–nov", OND: "oct–dic", NDJ: "nov–ene" };
+  const ORDEN_TRIM = ["DJF", "JFM", "FMA", "MAM", "AMJ", "MJJ", "JJA", "JAS", "ASO", "SON", "OND", "NDJ"];
+  // Fecha y hora en Bogotá: «26 nov 2026, 2:56 p. m.»
+  const fechaHora = (iso) => {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return fechaLarga(iso);
+    const p = Object.fromEntries(new Intl.DateTimeFormat("es-CO", { timeZone: "America/Bogota", day: "numeric", month: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true }).formatToParts(d).map((x) => [x.type, x.value]));
+    const ampm = /p/i.test(p.dayPeriod || "") ? "p. m." : "a. m.";
+    return `${p.day} ${MESES[Number(p.month) - 1]} ${p.year}, ${p.hour}:${p.minute} ${ampm}`;
+  };
+  // Clave para cruzar nombres del IDEAM y del DANE: minúsculas, sin tildes, sin paréntesis ni signos.
+  const clave = (t) => (t || "").replace(/\(.*?\)/g, " ").toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").replace(/[^a-z0-9]+/g, " ").trim();
+  const claveDpto = (t) => { const k = clave(t); return k.startsWith("bogota") ? "bogota" : k; };
 
   function nivelONI(v) {
     if (v >= 2.0) return "Niño muy fuerte";
@@ -73,6 +85,37 @@
     });
     const u = datos[datos.length - 1], ux = m.l + (datos.length - 1) * bw + bw / 2;
     s += `<text x="${ux}" y="${y(u.anomalia) - 6}" text-anchor="end" style="fill:#603338;font-weight:700">+${fmt(u.anomalia, 2)}</text>`;
+    return s + "</svg>";
+  }
+
+  // Este Niño frente al de 2015–2016: misma escala de trimestres, desde dic–feb del año en que arrancó.
+  function serieDesde(serie, anio) {
+    const i0 = serie.findIndex((p) => p.anio === anio && p.trimestre === "DJF");
+    return i0 < 0 ? [] : serie.slice(i0, i0 + 15);
+  }
+  function svgComparar(serie, W = 640) {
+    const a = serieDesde(serie, 2015), b = serieDesde(serie, 2026);
+    const n = 15, H = Math.max(240, Math.round(W * 0.44)), m = { t: 22, r: 16, b: 40, l: 36 };
+    const todos = a.concat(b).map((p) => p.anomalia);
+    const min = Math.min(-0.5, ...todos), max = Math.max(3, ...todos);
+    const x = (i) => m.l + i / (n - 1) * (W - m.l - m.r);
+    const y = (v) => m.t + (max - v) / (max - min) * (H - m.t - m.b);
+    let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+    [0, 0.5, 1, 1.5, 2, 2.5].forEach((t) => {
+      s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}" stroke="${t === 0 ? "#cbc2ac" : "#e7decb"}"${t === 0.5 || t === 2 ? ' stroke-dasharray="4 3"' : ""}/>`;
+      s += `<text x="${m.l - 6}" y="${y(t) + 4}" text-anchor="end">${t > 0 ? "+" : ""}${fmt(t, 1)}</text>`;
+    });
+    const etq = W < 500 ? [0, 4, 8, 12] : [0, 2, 4, 6, 8, 10, 12, 14];
+    etq.forEach((i) => { s += `<text x="${x(i)}" y="${H - 22}" text-anchor="middle">${TRIM[ORDEN_TRIM[i % 12]]}</text>`; });
+    s += `<text x="${x(0)}" y="${H - 6}" text-anchor="start">año del inicio</text><text x="${x(12)}" y="${H - 6}" text-anchor="middle">año siguiente</text>`;
+    const linea = (arr, col, ancho, guion) => `<polyline fill="none" stroke="${col}" stroke-width="${ancho}" stroke-linejoin="round"${guion ? ' stroke-dasharray="6 4"' : ""} points="${arr.map((p, i) => `${x(i).toFixed(1)},${y(p.anomalia).toFixed(1)}`).join(" ")}"/>`;
+    s += linea(a, "#a9a688", 2.2, true) + linea(b, "#603338", 3);
+    if (b.length) {
+      const u = b.length - 1, pa = a[u];
+      s += `<circle cx="${x(u)}" cy="${y(b[u].anomalia)}" r="4.5" fill="#603338"/><text x="${x(u) - 8}" y="${y(b[u].anomalia) - 10}" text-anchor="end" style="fill:#603338;font-weight:700">2026: +${fmt(b[u].anomalia, 2)}</text>`;
+      if (pa) s += `<circle cx="${x(u)}" cy="${y(pa.anomalia)}" r="4" fill="#73704f"/><text x="${x(u) + 8}" y="${y(pa.anomalia) + 16}" style="fill:#565442;font-weight:700">2015: +${fmt(pa.anomalia, 2)}</text>`;
+    }
+    s += `<g transform="translate(${m.l},4)"><rect width="14" height="3" y="4" fill="#603338"/><text x="20" y="9" style="fill:#2a231f">2026–2027</text><rect x="104" width="14" height="3" y="4" fill="#a9a688"/><text x="124" y="9" style="fill:#2a231f">2015–2016</text></g>`;
     return s + "</svg>";
   }
 
@@ -126,7 +169,7 @@
 
   function cambiarCapa(capa) {
     capaActual = capa;
-    document.querySelectorAll(".capa").forEach((b) => { const on = b.dataset.capa === capa; b.classList.toggle("activa", on); b.setAttribute("aria-checked", on); });
+    document.querySelectorAll(".capa[data-capa]").forEach((b) => { const on = b.dataset.capa === capa; b.classList.toggle("activa", on); b.setAttribute("aria-checked", on); });
     if (mapa && mapa.getLayer("estaciones")) {
       mapa.setFilter("estaciones", ["!=", ["get", CAPAS[capa].campo], null]);
       mapa.setPaintProperty("estaciones", "circle-color", expresionColor(capa));
@@ -140,6 +183,13 @@
       style: "https://tiles.openfreemap.org/styles/positron",
       center: [-73.6, 4.6], zoom: 4.6, minZoom: 3.5, maxZoom: 12,
       attributionControl: false,
+      // Que la rueda del ratón baje la página: el mapa se acerca con Ctrl + rueda o con dos dedos.
+      cooperativeGestures: true,
+      locale: {
+        "CooperativeGesturesHandler.WindowsHelpText": "Usa Ctrl + rueda para acercar el mapa",
+        "CooperativeGesturesHandler.MacHelpText": "Usa ⌘ + rueda para acercar el mapa",
+        "CooperativeGesturesHandler.MobileHelpText": "Usa dos dedos para mover el mapa",
+      },
     });
     mapa.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: "Datos: IDEAM, NASA FIRMS · Mapa: OpenFreeMap" }), "bottom-right");
     mapa.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
@@ -180,7 +230,10 @@
   }
 
   // ---------------------------------------------------------------- Municipio
-  const claveMun = (e) => `${e.municipio}, ${e.departamento}`;
+  let municipios = [], porCodigo = new Map(), porEtiqueta = new Map(), estacionesDe = new Map();
+  let ultimo = null; // { m, lista, cercanas, cerca, l7, l30, t, origen }
+  let datosGlobales = {}; // oni, emb, oficial, corrida: para la ficha impresa
+
   function distanciaKm(a, b) {
     const R = 6371, rad = Math.PI / 180;
     const dLat = (b.lat - a.lat) * rad, dLon = (b.lon - a.lon) * rad;
@@ -188,51 +241,172 @@
     return 2 * R * Math.asin(Math.sqrt(h));
   }
   const prom = (arr) => { const v = arr.filter((x) => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  const etiqueta = (m) => (clave(m.n) === clave(m.d) ? m.n : `${m.n}, ${m.d}`);
+  const legible = (url) => { try { return decodeURI(url); } catch (_) { return url; } };
+  const nombreEstacion = (e) => e.nombre.replace(/\s*\[\d+\]$/, "");
 
-  function mostrarMunicipio(clave) {
-    const lista = estaciones.filter((e) => claveMun(e) === clave);
-    if (!lista.length) return;
-    const centro = { lat: prom(lista.map((e) => e.lat)), lon: prom(lista.map((e) => e.lon)) };
-    const cerca = focos.filter((f) => distanciaKm(centro, f) <= 25).length;
-    const l7 = prom(lista.map((e) => e.lluvia7)), l30 = prom(lista.map((e) => e.lluvia30)), t = Math.max(...lista.map((e) => e.tmax7 ?? -Infinity));
-    const [mun, dep] = clave.split(", ");
-    let html = `<h3>${esc(mun)}</h3><p class="dep">${esc(dep)} · ${lista.length} ${lista.length === 1 ? "estación" : "estaciones"} del IDEAM</p>
-      <div class="resumen-mun">
+  // Une cada estación del IDEAM con su municipio del DANE (por nombre, o por la lista de alias).
+  function prepararMunicipios(datos) {
+    municipios = datos ? datos.municipios : [];
+    const porClave = new Map(municipios.map((m) => [m.k, m]));
+    porCodigo = new Map(municipios.map((m) => [m.c, m]));
+    porEtiqueta = new Map(municipios.map((m) => [clave(etiqueta(m)), m]));
+    estacionesDe = new Map();
+    estaciones.forEach((e) => {
+      const k = `${clave(e.municipio)}|${claveDpto(e.departamento)}`;
+      const m = porClave.get(k) || porCodigo.get((datos && datos.alias || {})[k]);
+      if (!m) return;
+      if (!estacionesDe.has(m.c)) estacionesDe.set(m.c, []);
+      estacionesDe.get(m.c).push(e);
+    });
+  }
+
+  function buscarMunicipio(texto) {
+    const t = (texto || "").trim();
+    if (!t) return null;
+    return porCodigo.get(t) || porEtiqueta.get(clave(t)) || null;
+  }
+
+  const textoFocos = (cerca) => sinDatosIncendios
+    ? "Hoy no hay datos de incendios de la NASA, así que no sabemos si hay focos de calor cerca. Si ves humo o fuego, llama al 123."
+    : cerca
+      ? `${cerca} ${cerca === 1 ? "foco de calor" : "focos de calor"} a menos de 25 km en las últimas 24 horas. Si ves humo o fuego, llama al 123.`
+      : "Sin focos de calor a menos de 25 km en las últimas 24 horas.";
+
+  function filaEstacion(e, conDistancia, m) {
+    return `<tr><td>${esc(nombreEstacion(e))}${conDistancia ? `<br><span class="sub">${esc(e.municipio)} · ${fmt(distanciaKm(m, e), 0)} km</span>` : ""}${e.reciente === false ? ' <span class="rojo">(sin datos recientes)</span>' : ""}</td><td class="n">${fmt(e.lluvia7, 1)}</td><td class="n">${fmt(e.lluvia30, 1)}</td><td class="n">${e.tmax7 == null ? "—" : fmt(e.tmax7, 1) + "°"}</td></tr>`;
+  }
+
+  function mostrarMunicipio(m, origen) {
+    if (!m) return;
+    const lista = estacionesDe.get(m.c) || [];
+    // Sin estación propia: las tres más cercanas que reportan lluvia reciente.
+    const cercanas = lista.length ? [] : estaciones
+      .filter((e) => e.reciente && e.lluvia30 != null)
+      .map((e) => ({ e, d: distanciaKm(m, e) }))
+      .sort((a, b) => a.d - b.d).slice(0, 3).map((x) => x.e);
+    const cerca = focos.filter((f) => distanciaKm(m, f) <= 25).length;
+    const usar = lista.length ? lista : [];
+    const l7 = prom(usar.map((e) => e.lluvia7)), l30 = prom(usar.map((e) => e.lluvia30));
+    const t = usar.length ? Math.max(...usar.map((e) => e.tmax7 ?? -Infinity)) : -Infinity;
+    ultimo = { m, lista, cercanas, cerca, l7, l30, t, origen };
+
+    let html = `<h3>${esc(m.n)}</h3><p class="dep">${esc(m.d)}${lista.length ? ` · ${lista.length} ${lista.length === 1 ? "estación" : "estaciones"} del IDEAM` : ""}</p>`;
+    if (origen === "ubicacion") html += `<p class="nota nota--arriba">El municipio más cercano a tu ubicación (aproximado: se compara con el punto de referencia del DANE de cada municipio). Tu ubicación no sale de tu teléfono.</p>`;
+    if (lista.length) {
+      html += `<div class="resumen-mun">
         <div><strong>${fmt(l7, 0)} mm</strong><span>lluvia 7 días${lista.length > 1 ? " (promedio)" : ""}</span></div>
         <div><strong>${fmt(l30, 0)} mm</strong><span>lluvia 30 días${lista.length > 1 ? " (promedio)" : ""}</span></div>
         <div><strong>${Number.isFinite(t) ? fmt(t, 1) + " °C" : "—"}</strong><span>temp. máxima 7 días</span></div>
       </div>
       <div class="tabla-scroll"><table><thead><tr><th>Estación</th><th>7 días</th><th>30 días</th><th>Máx.</th></tr></thead><tbody>` +
-      lista.map((e) => `<tr><td>${esc(e.nombre.replace(/\s*\[\d+\]$/, ""))}${e.reciente === false ? ' <span style="color:#a23b3b">(sin datos recientes)</span>' : ""}</td><td class="n">${fmt(e.lluvia7, 1)}</td><td class="n">${fmt(e.lluvia30, 1)}</td><td class="n">${e.tmax7 == null ? "—" : fmt(e.tmax7, 1) + "°"}</td></tr>`).join("") +
-      `</tbody></table></div>`;
-    html += sinDatosIncendios
-      ? `<p class="aviso">Hoy no hay datos de incendios de la NASA, así que no sabemos si hay focos de calor cerca. Si ves humo o fuego, llama al 123.</p>`
-      : cerca
-      ? `<p class="aviso"><strong>${cerca} ${cerca === 1 ? "foco de calor" : "focos de calor"}</strong> a menos de 25 km en las últimas 24 horas. Si ves humo o fuego, llama al 123.</p>`
-      : `<p class="nota">Sin focos de calor a menos de 25 km en las últimas 24 horas.</p>`;
+        lista.map((e) => filaEstacion(e, false, m)).join("") + `</tbody></table></div>`;
+    } else if (cercanas.length) {
+      html += `<p class="aviso aviso--suave">${esc(m.n)} no tiene una estación automática del IDEAM con datos. Estas son las tres más cercanas:</p>
+      <div class="tabla-scroll"><table><thead><tr><th>Estación cercana</th><th>7 días</th><th>30 días</th><th>Máx.</th></tr></thead><tbody>` +
+        cercanas.map((e) => filaEstacion(e, true, m)).join("") + `</tbody></table></div>`;
+    }
+    html += `<p class="${sinDatosIncendios || cerca ? "aviso" : "nota"}">${esc(textoFocos(cerca))}</p>`;
     html += `<p class="nota">Lluvia en milímetros y temperatura en °C, de estaciones automáticas del IDEAM (datos sin validar).</p>`;
+    html += `<div class="acciones-ficha">
+      <button type="button" class="boton boton--principal" id="imprimir">Ficha para el consejo de gestión del riesgo</button>
+      <button type="button" class="boton" id="copiar-enlace">Copiar enlace</button>
+    </div><p class="nota" id="copiado" aria-live="polite"></p>`;
     $("#ficha").innerHTML = html;
-    if (mapa) mapa.flyTo({ center: [centro.lon, centro.lat], zoom: 9, speed: 1.4 });
+    $("#imprimir").addEventListener("click", imprimirFicha);
+    $("#copiar-enlace").addEventListener("click", copiarEnlace);
+    $("#buscar").value = etiqueta(m);
+    try { history.replaceState(null, "", `?municipio=${m.c}`); } catch (_) { /* vista sin historial */ }
+    const centro = lista.length ? { lat: prom(lista.map((e) => e.lat)), lon: prom(lista.map((e) => e.lon)) } : m;
+    if (mapa) mapa.flyTo({ center: [centro.lon, centro.lat], zoom: lista.length ? 9 : 8, speed: 1.4 });
+  }
+
+  async function copiarEnlace() {
+    const url = location.href;
+    try { await navigator.clipboard.writeText(url); $("#copiado").textContent = "Enlace copiado. Pégalo donde quieras compartir esta ficha."; }
+    catch (_) { $("#copiado").textContent = `Copia este enlace: ${url}`; }
+  }
+
+  function usarUbicacion() {
+    const estado = $("#ubicacion-estado");
+    if (!navigator.geolocation) { estado.textContent = "Tu navegador no permite usar la ubicación. Escribe el nombre del municipio."; return; }
+    estado.textContent = "Buscando tu ubicación…";
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const yo = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+      let mejor = null, dMin = Infinity;
+      municipios.forEach((m) => { const d = distanciaKm(yo, m); if (d < dMin) { dMin = d; mejor = m; } });
+      if (!mejor || dMin > 150) { estado.textContent = "Tu ubicación parece estar fuera de Colombia. Escribe el nombre del municipio."; return; }
+      estado.textContent = "";
+      mostrarMunicipio(mejor, "ubicacion");
+    }, () => { estado.textContent = "No pudimos usar tu ubicación (no diste el permiso o no está disponible). Escribe el nombre del municipio."; },
+    { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+  }
+
+  // Ficha de una página para llevar al consejo municipal de gestión del riesgo (Ley 1523 de 2012).
+  function imprimirFicha() {
+    if (!ultimo) return;
+    const { m, lista, cercanas, cerca, l7, l30, t } = ultimo;
+    const { oni, emb, oficial, corrida } = datosGlobales;
+    const filas = (lista.length ? lista : cercanas).map((e) => `<tr><td>${esc(nombreEstacion(e))}${lista.length ? "" : ` (${esc(e.municipio)}, ${fmt(distanciaKm(m, e), 0)} km)`}</td><td>${fmt(e.lluvia7, 1)}</td><td>${fmt(e.lluvia30, 1)}</td><td>${e.tmax7 == null ? "—" : fmt(e.tmax7, 1) + " °C"}</td></tr>`).join("");
+    const u = oni && oni.ultimo;
+    const v = emb && emb.volumenSistema.length ? emb.volumenSistema[emb.volumenSistema.length - 1] : null;
+    const a = emb && emb.aportesSistema.length ? emb.aportesSistema[emb.aportesSistema.length - 1] : null;
+    const enlace = `${location.origin}${location.pathname}?municipio=${m.c}`;
+    $("#impresion").innerHTML = `
+      <p class="imp-kicker">El Niño en Colombia · ficha para el consejo municipal de gestión del riesgo</p>
+      <h1>${esc(m.n)} <span>${esc(m.d)}</span></h1>
+      <p class="imp-fecha">Datos actualizados el ${corrida ? fechaHora(corrida.actualizado) : "—"} (hora de Colombia).</p>
+      ${lista.length ? `<div class="imp-cifras"><div><b>${fmt(l7, 0)} mm</b>lluvia 7 días</div><div><b>${fmt(l30, 0)} mm</b>lluvia 30 días</div><div><b>${Number.isFinite(t) ? fmt(t, 1) + " °C" : "—"}</b>temperatura máxima 7 días</div></div>` : `<p>${esc(m.n)} no tiene una estación automática del IDEAM con datos. Se muestran las tres más cercanas.</p>`}
+      <table><thead><tr><th>Estación del IDEAM</th><th>Lluvia 7 días (mm)</th><th>Lluvia 30 días (mm)</th><th>Máxima 7 días</th></tr></thead><tbody>${filas}</tbody></table>
+      <p><b>Incendios:</b> ${esc(textoFocos(cerca))}</p>
+      <h2>El país</h2>
+      <ul>
+        ${u ? `<li><b>Índice de El Niño (ONI, NOAA):</b> ${u.anomalia > 0 ? "+" : ""}${fmt(u.anomalia, 2)} °C en ${TRIM[u.trimestre] || u.trimestre} de ${u.anio} (${nivelONI(u.anomalia)}).</li>` : ""}
+        ${v ? `<li><b>Embalses (XM):</b> volumen útil del ${fmt(v.valor, 1)} %${a ? `; el agua que llega está en ${fmt(a.valor, 0)} % de lo normal` : ""}, al ${fechaLarga(v.fecha)}.</li>` : ""}
+        ${oficial ? `<li><b>${esc(oficial.titular)}.</b> ${esc(oficial.resumen)}</li>` : ""}
+      </ul>
+      <h2>Para consultar</h2>
+      <ul>${oficial ? oficial.enlaces.map((l) => `<li>${esc(l.texto)}: ${esc(legible(l.url))}</li>`).join("") : ""}<li>Esta ficha en línea: ${esc(enlace)}</li></ul>
+      <p class="imp-limites">No es un pronóstico ni reemplaza las alertas del IDEAM ni de la UNGRD. Los datos de las estaciones automáticas no están validados y un foco de calor no siempre es un incendio forestal. Fuentes: NOAA, IDEAM, XM, NASA FIRMS y DANE. Tablero abierto de Estado X: github.com/Estado-X/nino-colombia.</p>`;
+    window.print();
   }
 
   // ---------------------------------------------------------------- Arranque
   async function iniciar() {
-    let oni, est, emb, inc, oficial, colombia, corrida;
+    let oni, est, emb, inc, oficial, colombia, corrida, munis;
     try {
-      [oni, est, emb, inc, oficial, colombia, corrida] = await Promise.all(["oni.json", "estaciones.json", "embalses.json", "incendios.json", "estado-oficial.json", "colombia.geojson", "corrida.json"].map((n) => cargar(n).catch(() => null)));
+      [oni, est, emb, inc, oficial, colombia, corrida, munis] = await Promise.all(["oni.json", "estaciones.json", "embalses.json", "incendios.json", "estado-oficial.json", "colombia.geojson", "corrida.json", "municipios.json"].map((n) => cargar(n).catch(() => null)));
     } catch (e) { console.error(e); }
+    datosGlobales = { oni, emb, oficial, corrida };
 
     if (oni) {
       const u = oni.ultimo;
       $("#oni-valor").textContent = `${u.anomalia > 0 ? "+" : ""}${fmt(u.anomalia, 2)} °C`;
       $("#oni-periodo").textContent = `Trimestre ${TRIM[u.trimestre] || u.trimestre} de ${u.anio}`;
       $("#oni-nivel").textContent = nivelONI(u.anomalia);
-      const pintaOni = () => ($("#graf-oni").innerHTML = svgONI(oni.serie, anchoDe("#graf-oni")));
+      let vista = "reciente";
+      const pintaOni = () => ($("#graf-oni").innerHTML = vista === "2015" ? svgComparar(oni.serie, anchoDe("#graf-oni")) : svgONI(oni.serie, anchoDe("#graf-oni")));
+      document.querySelectorAll(".vista-oni").forEach((b) => b.addEventListener("click", () => {
+        vista = b.dataset.vista;
+        document.querySelectorAll(".vista-oni").forEach((x) => { const on = x === b; x.classList.toggle("activa", on); x.setAttribute("aria-checked", on); });
+        $("#ayuda-oni").hidden = vista === "2015"; $("#ayuda-2015").hidden = vista !== "2015";
+        pintaOni();
+      }));
       pintaOni(); window.addEventListener("resize", pintaOni);
     }
     if (oficial) {
       $("#estado-titular").textContent = oficial.titular;
       $("#estado-resumen").textContent = oficial.resumen;
+      if (window.matchMedia("(max-width: 560px)").matches) {
+        $("#estado-resumen").classList.add("recortado");
+        const boton = $("#leer-todo");
+        boton.hidden = false;
+        boton.addEventListener("click", () => {
+          const abierto = $("#estado-resumen").classList.toggle("recortado") === false;
+          boton.textContent = abierto ? "Leer menos" : "Leer todo";
+          boton.setAttribute("aria-expanded", abierto);
+        });
+      }
       $("#declaraciones").innerHTML = oficial.declaraciones.map((d) => `<div class="decl"><h3>${esc(d.entidad)}</h3><time datetime="${d.fecha}">${fechaLarga(d.fecha)}</time><p>${esc(d.texto)}</p><a href="${esc(d.url)}" rel="noopener">${esc(d.nombreFuente || "Ver la fuente")}</a></div>`).join("");
       $("#enlaces").innerHTML = oficial.enlaces.map((l) => `<li><a href="${esc(l.url)}" rel="noopener">${esc(l.texto)}</a></li>`).join("");
     }
@@ -251,16 +425,22 @@
       ? "Hoy no hay datos de incendios de la NASA."
       : `Mostrar incendios activos de las últimas 24 horas: ${fmt(focos.length)} ${focos.length === 1 ? "foco" : "focos"}`;
     estaciones = est ? est.estaciones : [];
-    const claves = [...new Set(estaciones.map(claveMun))].sort((x, y) => x.localeCompare(y, "es"));
-    $("#lista-municipios").innerHTML = claves.map((c) => `<option value="${esc(c)}"></option>`).join("");
-    $("#buscar").addEventListener("change", (e) => mostrarMunicipio(e.target.value.trim()));
-    $("#buscar").addEventListener("input", (e) => { if (claves.includes(e.target.value.trim())) mostrarMunicipio(e.target.value.trim()); });
-    $("#fecha-datos").textContent = corrida ? fechaLarga(corrida.actualizado) : est ? fechaLarga(est.actualizado) : "—";
-    document.querySelectorAll(".capa").forEach((b) => b.addEventListener("click", () => cambiarCapa(b.dataset.capa)));
+    prepararMunicipios(munis);
+    const etiquetas = municipios.map(etiqueta).sort((x, y) => x.localeCompare(y, "es"));
+    $("#lista-municipios").innerHTML = etiquetas.map((c) => `<option value="${esc(c)}"></option>`).join("");
+    const elegir = (e) => { const m = buscarMunicipio(e.target.value); if (m && (!ultimo || ultimo.m !== m)) mostrarMunicipio(m, "busqueda"); };
+    $("#buscar").addEventListener("change", elegir);
+    $("#buscar").addEventListener("input", elegir);
+    $("#usar-ubicacion").addEventListener("click", usarUbicacion);
+    $("#fecha-datos").textContent = corrida ? fechaHora(corrida.actualizado) : est ? fechaLarga(est.actualizado) : "—";
+    document.querySelectorAll(".capa[data-capa]").forEach((b) => b.addEventListener("click", () => cambiarCapa(b.dataset.capa)));
     $("#ver-incendios").addEventListener("change", (e) => mapa && mapa.getLayer("incendios") && mapa.setLayoutProperty("incendios", "visibility", e.target.checked ? "visible" : "none"));
     pintarLeyenda();
     if (window.maplibregl && colombia) iniciarMapa(colombia);
     else $("#mapa").innerHTML = '<p style="padding:20px">No se pudo cargar el mapa. Revisa tu conexión y vuelve a intentarlo.</p>';
+    // Enlace con municipio: ?municipio=41001 (código DANE) o ?municipio=Neiva, Huila
+    const pedido = new URLSearchParams(location.search).get("municipio");
+    if (pedido) mostrarMunicipio(buscarMunicipio(pedido), "enlace");
   }
   iniciar();
 })();

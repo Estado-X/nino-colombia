@@ -19,9 +19,13 @@ Tablero abierto para saber qué está pasando con **El Niño en tu municipio**: 
 | Temperatura | Temperatura máxima de los últimos 7 días por estación | IDEAM, en datos.gov.co |
 | Embalses | Volumen útil del sistema eléctrico, agua que llega frente a lo normal y los embalses más bajos | XM |
 | Incendios | Focos de calor detectados por satélite en las últimas 24 horas | NASA FIRMS (VIIRS NOAA-20; si falla, NOAA-21) |
-| Tu municipio | Lo anterior para las estaciones de tu municipio y los focos de calor a menos de 25 km | Todas las anteriores |
+| Tu municipio | Los 1.122 municipios del DANE: las estaciones de tu municipio (o las tres más cercanas si no tiene) y los focos de calor a menos de 25 km. Lo buscas por nombre o con tu ubicación, y tiene enlace propio para compartir | Todas las anteriores y DANE (DIVIPOLA) |
 
-Además trae lo último que dicen la NOAA y el IDEAM, con enlace a cada fuente.
+Además trae lo último que dicen la NOAA y el IDEAM, con enlace a cada fuente, y:
+
+- **Ficha para el consejo municipal de gestión del riesgo:** una página para imprimir o guardar en PDF con los datos de tu municipio y del país, los límites y los enlaces a las alertas del IDEAM.
+- **Este Niño frente al de 2015–2016:** las dos curvas del índice en la misma gráfica, trimestre a trimestre.
+- **Enlace por municipio:** por ejemplo `https://estado-x.github.io/nino-colombia/?municipio=41001` (el número es el código DANE).
 
 ### Cómo funciona
 
@@ -29,6 +33,8 @@ Además trae lo último que dicen la NOAA y el IDEAM, con enlace a cada fuente.
 - Una vez al día, GitHub Actions corre `scripts/actualizar_datos.py` (está programado para las 6:00 a. m. de Colombia, pero GitHub suele arrancarlo varias horas después). El script baja los datos de las cuatro fuentes, los resume y los guarda en `data/`.
 - Si una fuente falla o responde vacía, las demás se actualizan igual y esa capa conserva los datos del día anterior. El problema queda anotado en `data/corrida.json`. Si el archivo de incendios de la NASA llega vacío, la página dice «Hoy no hay datos de incendios» en vez de mostrar cero focos.
 - El texto de las fuentes oficiales vive en `data/estado-oficial.json` y se actualiza a mano con cada boletín.
+- La lista de municipios (`data/municipios.json`) sale del DANE y se arma a mano con `python scripts/armar_municipios.py` cuando cambie la división política.
+- «Usar mi ubicación» compara tu posición con el punto de referencia de cada municipio dentro de tu navegador: no se guarda ni se envía a ningún lado.
 
 ### Úsalo o adáptalo
 
@@ -40,13 +46,22 @@ Para probarlo en tu computador: `python scripts/actualizar_datos.py` y luego `py
 
 ¿Quieres otra región? Cambia el contorno de `data/colombia.geojson` y las consultas del script.
 
+### Cómo colaborar
+
+Es abierto y gratuito: úsalo, cópialo o ayúdanos a mejorarlo. No hace falta saber programar.
+
+- ¿Algo no funciona o tienes una idea? [Abre un issue](https://github.com/Estado-X/nino-colombia/issues/new/choose) con una de las plantillas.
+- ¿Quieres programar? Busca los issues marcados como **buena primera tarea**.
+- La guía completa está en [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ### Límites
 
 - No es un pronóstico y **no reemplaza las alertas del IDEAM ni de la UNGRD**.
 - Los datos de las estaciones automáticas no están validados. El script descarta valores imposibles: más de 2.000 mm en 30 días, más de 800 mm en 7 días, o temperaturas máximas por fuera de 5 a 45 °C.
 - La lluvia se muestra en milímetros acumulados, sin compararla con lo normal: no hay un dato abierto de normales por estación que se pueda consultar así.
 - Un foco de calor no siempre es un incendio forestal. También aparecen quemas agrícolas y fuentes industriales.
-- Solo aparecen los municipios que tienen una estación automática del IDEAM con datos.
+- Si tu municipio no tiene una estación automática del IDEAM con datos, se muestran las tres más cercanas, que pueden estar en otro municipio y a otra altura.
+- «Usar mi ubicación» da el municipio más cercano a tu posición según el punto de referencia del DANE, que no es el contorno del municipio: cerca de un límite puede equivocarse.
 
 ### Crédito
 
@@ -54,7 +69,9 @@ Inspirado en **[osiris](https://github.com/simplifaisoul/osiris)** de simplifais
 
 Mapa base: [OpenFreeMap](https://openfreemap.org), © colaboradores de [OpenStreetMap](https://www.openstreetmap.org/copyright). Contorno de Colombia: [Natural Earth](https://www.naturalearthdata.com) (dominio público). Mapa con [MapLibre GL JS](https://maplibre.org).
 
-Los datos son de sus autores: NOAA, IDEAM, XM y NASA. Revisa los términos de uso de cada fuente antes de reutilizarlos.
+Lista de municipios: [DANE, DIVIPOLA - Códigos municipios](https://www.datos.gov.co/Mapas-Nacionales/DIVIPOLA-C-digos-municipios/gdxc-w37w), licencia [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.es); `data/municipios.json` es una versión resumida y se comparte con la misma licencia. Letra de los títulos: [Inter](https://github.com/rsms/inter), licencia SIL OFL 1.1 (`assets/fuentes/OFL-Inter.txt`).
+
+Los datos son de sus autores: NOAA, IDEAM, XM, NASA y DANE. Revisa los términos de uso de cada fuente antes de reutilizarlos.
 
 Hecho por **[Estado X](https://estadox.com)** · Código con licencia MIT.
 
@@ -75,9 +92,13 @@ An open dashboard that shows what **El Niño** is doing in each Colombian munici
 | Temperature | Maximum temperature over the last 7 days, by station | IDEAM, via datos.gov.co |
 | Reservoirs | Usable storage of the power system, inflows compared with normal, and the lowest reservoirs | XM |
 | Fires | Satellite fire hotspots from the last 24 hours | NASA FIRMS (VIIRS NOAA-20, with NOAA-21 as backup) |
-| Your municipality | All of the above for the stations in your municipality, plus hotspots within 25 km | All of the above |
+| Your municipality | All 1,122 DANE municipalities: the stations in your municipality (or the three closest if it has none) and hotspots within 25 km. Search by name or use your location; each one has its own link to share | All of the above and DANE (DIVIPOLA) |
 
-It also includes the latest statements from NOAA and IDEAM, each linked to its source.
+It also includes the latest statements from NOAA and IDEAM, each linked to its source, plus:
+
+- **A one-page sheet for the municipal disaster risk council**, ready to print or save as PDF.
+- **This El Niño compared with 2015–2016**, season by season, on the same chart.
+- **A link per municipality**, for example `https://estado-x.github.io/nino-colombia/?municipio=41001` (the number is the DANE code).
 
 ### How it works
 
@@ -85,6 +106,8 @@ It also includes the latest statements from NOAA and IDEAM, each linked to its s
 - Once a day, GitHub Actions runs `scripts/actualizar_datos.py` (scheduled for 6:00 a.m. Colombia time, though GitHub often starts it several hours later). The script downloads the four sources, summarizes them and saves the results to `data/`.
 - If one source fails or comes back empty, the others still update and that layer keeps the previous day's data. The problem is logged in `data/corrida.json`. If NASA's fire file comes back empty, the page says there is no fire data today instead of showing zero hotspots.
 - The official statements live in `data/estado-oficial.json` and are updated by hand with each bulletin.
+- The municipality list (`data/municipios.json`) comes from DANE and is rebuilt by hand with `python scripts/armar_municipios.py`.
+- "Use my location" compares your position with each municipality's reference point inside your browser; it is never stored or sent anywhere.
 
 ### Use it or adapt it
 
@@ -96,13 +119,22 @@ To try it on your computer, run `python scripts/actualizar_datos.py` and then `p
 
 To use another region, swap the outline in `data/colombia.geojson` and the queries in the script.
 
+### How to contribute
+
+It is open and free: use it, copy it or help us improve it. You do not need to code.
+
+- Something broken or an idea? [Open an issue](https://github.com/Estado-X/nino-colombia/issues/new/choose) with one of the templates.
+- Want to code? Look for issues labeled **good first task** (*buena primera tarea*).
+- The full guide (in Spanish) is in [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ### Limits
 
 - It is not a forecast and **does not replace IDEAM or UNGRD alerts**.
 - Automatic station data is not quality-controlled. The script drops impossible values: more than 2,000 mm in 30 days, more than 800 mm in 7 days, or maximum temperatures outside 5–45 °C.
 - Rainfall is shown as accumulated millimetres, not compared with normal, because there is no open per-station climatology that can be queried this way.
 - A fire hotspot is not always a wildfire. Agricultural burning and industrial heat sources also show up.
-- Only municipalities with an IDEAM automatic station that reports data are listed.
+- If your municipality has no IDEAM automatic station with data, the three closest stations are shown; they may be in another municipality and at a different altitude.
+- "Use my location" picks the municipality whose DANE reference point is closest, not its boundary, so it can be wrong near a border.
 
 ### Credit
 
@@ -110,6 +142,8 @@ Inspired by **[osiris](https://github.com/simplifaisoul/osiris)** by simplifaiso
 
 Base map: [OpenFreeMap](https://openfreemap.org), © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors. Colombia outline: [Natural Earth](https://www.naturalearthdata.com) (public domain). Map rendering: [MapLibre GL JS](https://maplibre.org).
 
-The data belongs to its publishers: NOAA, IDEAM, XM and NASA. Check each source's terms of use before reusing it.
+Municipality list: DANE DIVIPOLA (datos.gov.co, gdxc-w37w), CC BY-SA 4.0; `data/municipios.json` is a summarized version shared under the same license. Title font: Inter, SIL OFL 1.1.
+
+The data belongs to its publishers: NOAA, IDEAM, XM, NASA and DANE. Check each source's terms of use before reusing it.
 
 Made by **[Estado X](https://estadox.com)** · Code under the MIT license.
